@@ -15,5 +15,10 @@
     <ProjectReference Include="..\Shared\TicketDetalle.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\" />
+    <Folder Include="DAL\" />
+  </ItemGroup>
+
 
 </Project>
