@@ -1,0 +1,116 @@
+﻿@page "/TicketDetalle"
+@page "/TicketDetalle/{TicketDetalleId:int}"
+@inject HttpClient httpClient
+
+
+<EditForm Model="ticketDetalles" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+
+    <div class="container">
+        <div class="card shadow-lg">
+            <div class="card-header">
+                <h3>Registro de Tickets Detalle</h3>
+            </div>
+            <div class=card-body>
+
+                <div class="col-xs-12 col-sm-12 col-md-8 col-lg-6 col-xl-4">
+                    <label>Ticket Detalle Id:</label>
+                    <div class="input-group mb-3">
+                        <InputNumber @bind-Value="ticketDetalles.TicketDetalleId" class="form-control" aria-describedby="BotonBuscar" />
+                        <button @onclick="Buscar" class="btn btn-outline-primary" type="button" id="BotonBuscar"><i class="oi oi-magnifying-glass" /></button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="Descripcion">Descripcion:</label>
+                    <InputText @bind-Value="ticketDetalles.emisor" class="form-control" />
+                    <ValidationMessage For="@(() => ticketDetalles.emisor)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="DiasCompromiso">DiasCompromiso:</label>
+                    <InputNumber @bind-Value="ticketDetalles.mensaje" class="form-control" />
+                    <ValidationMessage For="@(() => ticketDetalles.mensaje)" />
+                </div>
+
+            </div>
+            <div class="card-footer d-flex justify-content-center">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-primary" @onclick="Nuevo">Nuevo <i class="oi oi-file" /></button>
+                    <button type="submit" class="btn btn-outline-success">Guardar <i class="oi oi-document" /></button>
+                    <button type="button" class="btn btn-outline-danger" @onclick="Eliminar">Eliminar <i class="oi oi-trash" /></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</EditForm>
+
+@code {
+
+    [Parameter]
+
+    public int TicketDetalleId { get; set; }
+
+    public TicketDetalles ticketDetalles { get; set; } = new TicketDetalles();
+
+    public string Mensaje { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (TicketDetalleId > 0)
+        {
+            this.ticketDetalles.TicketDetalleId = TicketDetalleId;
+            await Buscar();
+        }
+    }
+
+    public async Task Buscar()
+    {
+        var Encontrada = await httpClient.GetFromJsonAsync<TicketDetalles>($"api/TicketDetalles/{ticketDetalles.TicketDetalleId}");
+        if (Encontrada != null)
+        {
+            this.ticketDetalles = Encontrada;
+            StateHasChanged();
+        }
+        else
+        {
+            Mensaje = "Ticket no encontrada";
+        }
+    }
+
+    public async void Guardar()
+    {
+        using var response = await httpClient.PostAsJsonAsync("api/TicketDetalles", ticketDetalles);
+        if (!response.IsSuccessStatusCode)
+        {
+            Mensaje = response.ReasonPhrase ?? "error";
+            return;
+        }
+        var Devuelta = await response.Content.ReadFromJsonAsync<TicketDetalles>();
+        if (Devuelta is not null)
+        {
+            ticketDetalles = Devuelta;
+            StateHasChanged();
+        }
+    }
+
+    public void Nuevo()
+    {
+        this.ticketDetalles = new TicketDetalles();
+        Mensaje = string.Empty;
+    }
+
+    public async Task Eliminar()
+    {
+        using var response = await httpClient.DeleteAsync($"api/TicketDetalles/{ticketDetalles.TicketDetalleId}");
+        if (!response.IsSuccessStatusCode)
+        {
+            Mensaje = response.ReasonPhrase ?? "error";
+            return;
+        }
+        else
+            Nuevo();
+    }
+}
